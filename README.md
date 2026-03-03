@@ -1,72 +1,95 @@
-# Icarus Consumables - Minified Data Format
+# Icarus Consumables Minified Data
 
-This document describes the structure of `icarus_consumables.min.json`, a consolidated and optimized dataset containing all food, drink, and medicine information from Icarus.
+This document describes the structure and fields of the combined, minified JSON output (`icarus_consumables.min.json`).
 
-## File Overview
+## 1. File Overview
 
-The minified file is a single JSON object containing four primary keys:
-
+The JSON object contains:
 - `metadata`: Runtime and version information.
 - `items`: The master list of consumable items.
-- `recipes`: Crafting recipes indexed by the target item.
+- `recipes`: Crafting recipes indexed by the internal recipe ID.
+- `generics`: Mappings for tag-based recipe inputs (e.g., `Any_Vegetable`) to valid items.
+- `features`: Mapping of feature IDs (DLCs/Updates) to their display names.
 - `modifiers`: Detailed effects for food/drink buffs.
-- `stat_metadata`: (Optional) Mappings for internal stat codes to readable names.
-
-## 1. Metadata
-
-Provides context for the generation run.
-
-| Field | Description |
-| :--- | :--- |
-| `game_version` | The internal version of Icarus used (e.g., `1.2.3.12345`). |
-| `build_guid` | The Steam Build ID of the processed game data. |
-| `parser_version` | The version of the extraction tool used. |
-| `generated_date` | Date of generation in `YYYY-MM-DD` format. |
+- `stat_metadata`: Mappings for internal stat codes to readable names and categories.
 
 ## 2. Items (`items`)
 
-An array of objects representing items. Descriptions and source IDs are removed for size efficiency.
+An array of consumable items.
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `name` | string | Normalized internal ID (e.g., `meatstew`). |
-| `display_name` | string | Localized name in English. |
-| `category` | string | `Food`, `Drink`, `Animal Food`, or `Medicine`. |
-| `base_stats` | object | Mapping of stat names to values (e.g., `{"Food": 50}`). |
-| `tier_info` | object | Contains `total_tier` (numeric) and `best_bench`. |
-| `modifiers` | array | List of buff IDs associated with this item. |
-| `source_item` | string | For piece-based items (cakes), the parent item ID. |
-| `is_decay_product`| boolean| True if this item is a byproduct of spoilage. |
+| `name` | string | Internal ID (normalized). |
+| `display_name` | string | Localized human-readable name. |
+| `category` | string | Practical classification (Food, Drink, Workshop). |
+| `tier` | object | `{ "total": 2.3, "anchor": "Crafting_Bench" }`. |
+| `base_stats` | object | Direct permanent stats e.g. `{ "Food": 50 }`. |
+| `modifiers` | array | List of modifier IDs attached to this item. |
+| `recipes` | array | List of recipe IDs that produce this item. |
+| `required_features` | array | (Optional) Feature IDs required for this item (inherited). |
+| `traits` | object | (Optional) Booleans like `is_harvested`, `is_decay_product`. |
+| `growth_data` | object | (Optional) Farming info if applicable. |
 
 ## 3. Recipes (`recipes`)
 
-A dictionary where keys are normalized item names and values are arrays of possible recipes.
+A dictionary of recipes indexed by ID.
 
-| Field | Description |
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | string | The internal ID of the recipe. |
+| `inputs` | array | Required materials (see [Input Fields](#input-fields)). |
+| `alternate_inputs` | array | (Optional) Alternative material sets. |
+| `outputs` | array | Items produced (see [Output Fields](#output-fields)). |
+| `benches` | array | Localized bench names, sorted by tier. |
+| `requirements` | object | Logic for unlocking (see [Requirement Fields](#requirement-fields)). |
+
+#### Input Fields
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `name` | string | ID or Tag. |
+| `count` | integer | Quantity required. |
+| `display_name` | string | Localized name. |
+| `is_generic` | boolean | `true` if tag-based. |
+
+#### Requirement Fields
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `talent` | string | The internal Talent ID required to craft. |
+| `character` | integer | (Optional) Minimum character level. |
+| `required_features` | array | (Optional) Feature IDs required for this recipe. |
+
+### 4. Generic Ingredient Groups (`generics`)
+
+Maps tags to valid items.
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | string | The tag (e.g., `Any_Vegetable`). |
+| `items` | array | List of valid item IDs. |
+
+## 5. Modifiers (`modifiers`)
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | string | Internal ID. |
+| `display_name` | string | Name of the buff. |
+| `lifetime` | integer | Duration in seconds. |
+| `effects` | object | Stat changes. |
+
+## 6. Stat Metadata (`stat_metadata`)
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `label` | string | Readable label. |
+| `categories` | array | Functional categories. |
+
+## 7. Features (`features`)
+
+A dictionary mapping internal feature IDs to their public-facing display names.
+
+| Key (ID) | Value (Display Name) |
 | :--- | :--- |
-| `inputs` | List of `{item: "id", count: N, is_generic: bool}`. |
-| `outputs` | List of `{item: "id", count: N}`. |
-| `benches` | List of localized bench names where this can be crafted. |
-| `requirement` | Talent name required to unlock the recipe. |
+| `Styx` | `Styx Expansion` |
+| `Homestead` | `Homestead` |
 
-## 4. Modifiers (`modifiers`)
-
-Details the specific buffs granted by consuming items.
-
-| Field | Description |
-| :--- | :--- |
-| `id` | The internal buff ID. |
-| `lifetime` | Duration in seconds. |
-| `stats` | Mapping of applied stat modifiers (e.g., `{"MaxHealth": 100}`). |
-| `state_color` | Color coding for the buff (Food, Drink, Tonic). |
-
-## 5. Stat Metadata (`stat_metadata`)
-
-Maps internal game stat keys (e.g., `Stats_MaxHealth`) to user-friendly titles ("Max Health"). This is useful for UI display where raw keys are too technical.
-
----
-
-### Tips for Consumption
-- Use the `name` field in `items` to lookup entries in `recipes`.
-- Modifiers in `items` point to the keys in the global `modifiers` object.
-- All IDs are lowercased and stripped of non-alphanumeric characters for consistent cross-referencing.
+**Note on Remapping**: Some technical feature levels (like `Galileo` or `Laika`) are remapped to `Core` if they are now part of the base game. These will not appear as tags in the output.
