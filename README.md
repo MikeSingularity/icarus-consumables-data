@@ -130,9 +130,11 @@ Recipes are indexed by their internal ID and bridge items with the benches that 
 
 Most item transactions (inputs, outputs, intermediate production) use the `Product` schema:
 
+| Field | Type | Description |
+| :--- | :--- | :----- |
 | `id` | string | The internal ID of the item or **tag** (for generic inputs). |
 | `count` | number | The quantity required or produced. |
-| `recipe_produces` | object | **(Optional)** A nested `Product` object. This represents an **intermediate conduit or placeholder** (e.g., a whole cake or an egg) that yields the final interactive output (pieces or a baby dragon). |
+| `recipe_produces` | object | **(Optional)** A nested `Product` object. This represents an **intermediate conduit or placeholder** (e.g., a whole cake) that yields the final interactive output. |
 
 ### 4.2 Recipe Structure Example (Simple: `dried_white_meat`)
 
