@@ -101,3 +101,4 @@ Fluids (Water, Fuel, etc.) represent a unique data type in Icarus Calculator.
 
 - **Internal Storage**: All fluid amounts are processed and stored in **Milliliters (ML)** to maintain high precision across recipe requirements.
 - **Display Mapping**: Items tagged with `IC.Fluid.*` are automatically assigned a `display_operations` rule: `{"operation": "division", "value": 1000}`. This ensures the UI displays values in **Liters (L)**, which is more readable for players.
+
